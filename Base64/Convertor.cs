@@ -66,5 +66,69 @@ namespace Base64
 
             return new string(result);
         }
+
+        public static int DecodeTriplet(string code,byte[] result) 
+        {
+            var no = BASE64_ALPH.IndexOf(code[0]);
+            if (no == -1) return 1;
+
+            result[0] = (byte)(no << 2);
+
+            no = BASE64_ALPH.IndexOf(code[1]);
+            if (no == -1) return 2;
+
+            result[0] = (byte)(result[0] | no >> 4);
+            result[1] = (byte)(no << 4);  
+
+            no = BASE64_ALPH.IndexOf(code[2]);
+            if (no == -1) return 3;
+
+            result[1] = (byte)(result[1] | no >> 2);
+            result[2] = (byte)(no << 6);
+
+            no = BASE64_ALPH.IndexOf(code[3]);
+            if (no == -1) return 4;
+
+            result[2] = (byte)(result[2] | no);
+
+            return 0;
+        }
+
+        public static int DecodeDuplet(string code, byte[] result)
+        {
+            var no = BASE64_ALPH.IndexOf(code[0]);
+            if (no == -1) return 1;
+
+            result[0] = (byte)(no << 2);
+
+            no = BASE64_ALPH.IndexOf(code[1]);
+            if (no == -1) return 2;
+
+            result[0] = (byte)(result[0] | no >> 4);
+            result[1] = (byte)(no << 4);
+
+            no = BASE64_ALPH.IndexOf(code[2]);
+            if (no == -1) return 3;
+
+            result[1] = (byte)(result[1] | no >> 2);
+
+            return 0;
+        }
+
+        public static int DecodeSymbol(string code, byte[] result)
+        {
+            var no = BASE64_ALPH.IndexOf(code[0]);
+            if (no == -1) return 1;
+
+            result[0] = (byte)(no << 2);
+
+            no = BASE64_ALPH.IndexOf(code[1]);
+            if (no == -1) return 2;
+
+            result[0] = (byte)(result[0] | no >> 4);
+
+            return 0;
+        }
+
     }
 }
