@@ -15,7 +15,18 @@ namespace Base64
                 Console.WriteLine($"Error: cannot open file {fileNameIn}.");
                 return;
             }
-            if (fileNameOut.Length == 0) fileNameOut = fileNameIn.Remove(fileNameIn.LastIndexOf('.'));
+            if (fileNameOut.Length == 0) fileNameOut = fileNameIn.Remove(fileNameIn.LastIndexOf('.')) + ".base64";
+            else
+            {
+                var indexOut = fileNameOut.LastIndexOf('.');
+                if (indexOut == -1) { Console.WriteLine("Error - incorrect path in file output"); return; }
+                var p = fileNameOut.Substring(indexOut);
+                if (p != ".base64")
+                {
+                    Console.WriteLine("Error: output file not .base64");
+                    return;
+                }
+            }
             var l = fileNameIn.Substring(fileNameIn.LastIndexOf('.'));
             if (l != ".txt")
             {
@@ -23,50 +34,68 @@ namespace Base64
                 return;
             }
 
-            using FileStream fs = File.OpenRead(fileNameIn);
-            using StreamWriter writetext = new($"{fileNameOut}.base64");
-            var size = fs.Length / 57;
-            var coded = string.Empty;
-            byte[] temp = new byte[57];
-            for (int i = 0; i < size; i++)
+            try
             {
-                fs.Read(temp, 0, 57);
-
-                for (int j = 0; j < 19; j++)
+                using FileStream fs = File.OpenRead(fileNameIn);
+                try
                 {
-                    byte[] buf = { temp[3 * j], temp[3 * j + 1], temp[3 * j + 2] };
-                    coded += Convertor.EncodeTriplet(buf);
+                    using StreamWriter writetext = new($"{fileNameOut}");
+                    var size = fs.Length / 57;
+                    var coded = string.Empty;
+                    byte[] temp = new byte[57];
+                    for (int i = 0; i < size; i++)
+                    {
+                        fs.Read(temp, 0, 57);
+
+                        for (int j = 0; j < 19; j++)
+                        {
+                            byte[] buf = { temp[3 * j], temp[3 * j + 1], temp[3 * j + 2] };
+                            coded += Convertor.EncodeTriplet(buf);
+                        }
+                        writetext.WriteLine(coded);
+
+                        coded = string.Empty;
+                        temp = new byte[57];
+                    }
+
+                    fs.Read(temp, 0, 57);
+                    size = fs.Length % 57;
+                    for (int i = 0; i < size / 3; i++)
+                    {
+                        byte[] buf = { temp[3 * i], temp[3 * i + 1], temp[3 * i + 2] };
+                        coded += Convertor.EncodeTriplet(buf);
+                    }
+                    switch (size % 3)
+                    {
+                        case 0:
+                            break;
+                        case 1:
+                            byte[] buf1 = { temp[size - 1] };
+                            coded += Convertor.EncodeSymbol(buf1);
+                            break;
+                        case 2:
+                            byte[] buf2 = { temp[size - 2], temp[size - 1] };
+                            coded += Convertor.EncodeDuplet(buf2);
+                            break;
+                    }
+                    writetext.WriteLine(coded);
+
+                    writetext.Close();
+                    Console.WriteLine($"{fileNameIn} succesfully encoded into {fileNameOut}");
+                    
                 }
-                writetext.WriteLine(coded);
+                catch (Exception ex)
+                {
 
-                coded = string.Empty;
-                temp = new byte[57];
+                    Console.WriteLine($"Error: cannot create the file {fileNameOut} - {ex.Message}");
+                }
+                fs.Close();
             }
-
-            fs.Read(temp, 0, 57);
-            size = fs.Length % 57;
-            for (int i = 0; i < size / 3; i++)
+            catch (Exception ex)
             {
-                byte[] buf = { temp[3 * i], temp[3 * i + 1], temp[3 * i + 2] };
-                coded += Convertor.EncodeTriplet(buf);
-            }
-            switch (size % 3)
-            {
-                case 0:
-                    break;
-                case 1:
-                    byte[] buf1 = { temp[size - 1] };
-                    coded += Convertor.EncodeSymbol(buf1);
-                    break;
-                case 2:
-                    byte[] buf2 = { temp[size - 2], temp[size - 1] };
-                    coded += Convertor.EncodeDuplet(buf2);
-                    break;
-            }
-            writetext.WriteLine(coded);
 
-            writetext.Close();
-            fs.Close();
+                Console.WriteLine($"Error: cannot open the file {fileNameIn} - {ex.Message}");
+            }
         }
 
         public static void DecodeFile(string fileNameIn, string fileNameOut = "")
@@ -76,7 +105,18 @@ namespace Base64
                 Console.WriteLine($"Error: cannot open file {fileNameIn}.");
                 return;
             }
-            if (fileNameOut.Length == 0) fileNameOut = fileNameIn.Remove(fileNameIn.IndexOf('.'));
+            if (fileNameOut.Length == 0) fileNameOut = fileNameIn.Remove(fileNameIn.IndexOf('.')) + ".txt";
+            else
+            {
+                var indexOut = fileNameOut.LastIndexOf('.');
+                if (indexOut == -1) { Console.WriteLine("Error - incorrect path in file output"); return; }
+                var p = fileNameOut.Substring(indexOut);
+                if (p != ".txt")
+                {
+                    Console.WriteLine("Error: output file not .txt");
+                    return;
+                }
+            }
             var l = fileNameIn.Substring(fileNameIn.LastIndexOf("."));
             if (l != ".base64")
             {
@@ -195,17 +235,19 @@ namespace Base64
                             break;
                     }
                     writetext.Close();
+                    Console.WriteLine($"{fileNameIn} succesfully decoded into {fileNameOut}");
                 }
                 catch (Exception ex)
                 {
                     
-                    Console.WriteLine($"Error: cannot create the file {fileNameOut}.base64 - {ex}");
+                    Console.WriteLine($"Error: cannot create the file {fileNameOut} - {ex.Message}");
                 }
             }
             catch(Exception ex)
             {
-                Console.WriteLine($"Error: cannot open the file{fileNameIn} - {ex}");
+                Console.WriteLine($"Error: cannot open the file {fileNameIn} - {ex.Message}");
             }
+
         }
     }
 }

@@ -6,9 +6,6 @@ using System.Threading.Tasks;
 
 namespace Base64
 {
-   /// <summary>
-   /// Basic convertor for Base64 coder
-   /// </summary>
     internal class Convertor
     {
         const string BASE64_ALPH = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+\\";
@@ -129,6 +126,5 @@ namespace Base64
 
             return 0;
         }
-
     }
 }
