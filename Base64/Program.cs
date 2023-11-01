@@ -1,4 +1,7 @@
 ﻿using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Transactions;
 
 namespace Base64
 {
@@ -6,33 +9,48 @@ namespace Base64
     {
         static void Main(string[] args)
         {
-            byte[] bytes = { 
-                0xCF,
-                0xF1,
-                0x2E };
-            var triplet = Convertor.EncodeTriplet(bytes);
-            var duplet = Convertor.EncodeDuplet(bytes);
-            var symbol = Convertor.EncodeSymbol(bytes);
+            var s = "";
 
-            Console.WriteLine($"triplet = {triplet}");
-            Console.WriteLine($"duplet = {duplet}");
-            Console.WriteLine($"symbol = {symbol}");
-
-            var result = new byte[3];
-            Convertor.DecodeTriplet("ZQ==", result);
-            Console.WriteLine($"decoded triplet = {result[0].ToString("X")}, {result[1].ToString("X")}, {result[2].ToString("X")}");
-            Console.WriteLine(System.Text.Encoding.Default.GetString(result));
-            result = new byte[2];
-            Convertor.DecodeDuplet(duplet, result);
-            Console.WriteLine($"decoded duplet = {result[0]:X}, {result[1].ToString("X")}");
-            result = new byte[1];
-            Convertor.DecodeSymbol(symbol, result);
-            Console.WriteLine($"decoded symbol = {result[0]:X}");
-
-            //Encoder.EncodeFile("C:\\data\\test.txt");
-
-            Encoder.DecodeFile("C:\\data\\test.base64", "C:\\data\\test2.txt");
-            Console.ReadLine();
+            var r = new Regex(@"(?i)base64\s+(?<cmd>\w)(?-i)\s+(?<input>[\w:\\.]+)(?<output>\s[\w:\\.]+)?");
+            var rhelp = new Regex(@"(?i)base64\s+help\s*(?-i)");
+            while (true)
+            {
+                Console.WriteLine("Enter command(type 'base64 help' for more information):");
+                s = Console.ReadLine();
+                if(s == "")
+                {
+                    Console.WriteLine("Error: empty input");
+                    continue;
+                }
+                if (r.IsMatch(s))
+                {
+                    var match = r.Match(s);
+                    if (match.Groups[1].ToString().Equals("d", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Encoder.DecodeFile(match.Groups[2].ToString(), match.Groups[3].ToString().TrimStart());
+                    }
+                    else if (match.Groups[1].ToString().Equals("e", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Encoder.EncodeFile(match.Groups[2].ToString(), match.Groups[3].ToString().TrimStart());
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Error - unknown command '{match.Groups[1]}'");
+                    }
+                    continue;
+                }
+                if (rhelp.IsMatch(s))
+                {
+                    Console.WriteLine("Usage: base64 <cmd> <input> <output>");
+                    Console.WriteLine("Where: <cmd> - 'd' or 'e' - decode or encode file");
+                    Console.WriteLine("<input> - input file, which we need decode or encode in .base64 or .txt extension");
+                    Console.WriteLine("<output> - output file, where we save result of decode or encode. Can be empty, so result saves on file with same name, but different extension");
+                    Console.WriteLine("type 'exit' to close the console");
+                    continue;
+                }
+                if (s.Equals("exit", StringComparison.OrdinalIgnoreCase)) break;
+                Console.WriteLine("Unknown command - commands starts from 'base64'");
+            }
         }
     }
 }
